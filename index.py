@@ -19,11 +19,6 @@ TRUE_BOOL_VALUES = ('1', 's', 'sim', 'y', 'yes', 't', 'true')
 CACHE_FILE = '/tmp/cache.txt'
 CACHE_EXPIRY = timedelta(days=1)
 
-VALID_SOURCES = {
-    'INVESTIDOR10_SOURCE': 'investidor10',
-    'ALL_SOURCE': 'all'
-}
-
 VALID_INFOS = [ 'assets_value', 'avg_annual_dividends', 'cagr_profit', 'cagr_revenue', 'debit', 'dy', 'ebit', 'enterprise_value', 'equity_value', 'gross_margin', 'initial_date', 'latests_dividends', 'link', 'liquidity', 'market_value', 'max_52_weeks', 'min_52_weeks', 'name', 'net_margin', 'net_profit', 'net_revenue', 'payout', 'pl', 'price', 'pvp', 'roe', 'sector', 'total_issued_shares', 'variation_12m', 'variation_30d' ]
 
 def request_get(url, headers=None):
@@ -331,7 +326,7 @@ def get_share_data(ticker, share_type, request_share):
     info_names = info_names if len(info_names) else VALID_INFOS
 
     #print(f'Delete cache? {should_delete_cache}, Clear cache? {should_clear_cache}, Use cache? {should_use_cache}')
-    #print(f'Ticker: {ticker}, Source: {source}, Info names: {info_names}, Share Type: {share_type}')
+    #print(f'Ticker: {ticker}, Info names: {info_names}, Share Type: {share_type}')
 
     if should_delete_cache:
         delete_cache()
@@ -339,7 +334,7 @@ def get_share_data(ticker, share_type, request_share):
     should_use_and_not_delete_cache = should_use_cache and not should_delete_cache
 
     if should_use_and_not_delete_cache:
-        id = f'{ticker}{source}{",".join(sorted(info_names))}'.encode('utf-8')
+        id = f'{ticker}{",".join(sorted(info_names))}'.encode('utf-8')
         hash_id = sha512(id).hexdigest()
         #print(f'Cache Hash ID: {hash_id}, From values: {id}')
 
