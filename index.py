@@ -322,11 +322,11 @@ def get_etf_data(ticker):
     return get_share_data(ticker, '', get_etf_from_investidor10)
 
 def get_share_data(ticker, share_type, request_share):
-    should_delete_cache = '0'.lower() in TRUE_BOOL_VALUES #request.args.get('should_delete_cache', '0').lower() in TRUE_BOOL_VALUES
-    should_clear_cache = '0'.lower() in TRUE_BOOL_VALUES #request.args.get('should_clear_cache', '0').lower() in TRUE_BOOL_VALUES
-    should_use_cache = '0'.lower() in TRUE_BOOL_VALUES #request.args.get('should_use_cache', '1').lower() in TRUE_BOOL_VALUES
+    should_delete_cache = request.args.get('should_delete_cache', '0').lower() in TRUE_BOOL_VALUES
+    should_clear_cache = request.args.get('should_clear_cache', '0').lower() in TRUE_BOOL_VALUES
+    should_use_cache = request.args.get('should_use_cache', '1').lower() in TRUE_BOOL_VALUES
 
-    info_names = ''.replace(' ', '').lower().split(',') #request.args.get('info_names', '').replace(' ', '').lower().split(',')
+    info_names = request.args.get('info_names', '').replace(' ', '').lower().split(',')
     info_names = [ info for info in info_names if info in VALID_INFOS ]
     info_names = info_names if len(info_names) else VALID_INFOS
 
