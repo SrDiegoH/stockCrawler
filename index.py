@@ -25,7 +25,7 @@ VALID_SOURCES = {
     'ALL_SOURCE': 'all'
 }
 
-VALID_INFOS = [ 'assets_value', 'avg_annual_dividends', 'cagr_profit', 'cagr_revenue', 'debit', 'dy', 'ebit', 'enterprise_value', 'equity_value', 'gross_margin', 'initial_date', 'latests_dividends', 'link', 'liquidity', 'market_value', 'max_52_weeks', 'min_52_weeks', 'name', 'net_margin', 'net_profit', 'net_revenue', 'payout', 'pl', 'price', 'pvp', 'roe', 'sector', 'total_issued_shares', 'variation_12m', 'variation_30d', 'beta' ]
+VALID_INFOS = [ 'actuation', 'assets_value', 'avg_annual_dividends', 'cagr_profit', 'cagr_revenue', 'debit', 'dy', 'ebit', 'enterprise_value', 'equity_value', 'gross_margin', 'initial_date', 'latests_dividends', 'link', 'liquidity', 'market_value', 'max_52_weeks', 'min_52_weeks', 'name', 'net_margin', 'net_profit', 'net_revenue', 'payout', 'pl', 'price', 'pvp', 'roe', 'sector', 'total_issued_shares', 'type', 'variation_12m', 'variation_30d', 'beta' ]
 
 def request_get(url, headers=None):
     response = requests.get(url, headers=headers)
@@ -344,7 +344,7 @@ def convert_stockanalysis_etf_data(html_page, info_names):
     total_issued_shares = multiply_by_unit(get_substring(html_page, 'sharesOut:"', '",'))
 
     ALL_INFO = {
-        'name': lambda: get_substring(html_page, 'name:"', '",').replace('&', ''),
+        'name': lambda: get_substring(html_page, 'name:"', '",'),
         'type': lambda: get_substring(html_page, '"Asset Class","', '"]'),
         'sector': lambda: get_substring(html_page, '"Category","', '"]'),
         'actuation': lambda: get_substring(html_page, '"Index Tracked","', '"]'),
