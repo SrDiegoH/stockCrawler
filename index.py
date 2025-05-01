@@ -476,7 +476,7 @@ def get_share_data(ticker, share_type, request_share):
             return jsonify({'data': cached_data, 'source': 'cache', 'date': cache_date.strftime("%d/%m/%Y, %H:%M")}), 200
 
     data = request_share(ticker, share_type, source, info_names)
-    #print(f'Data from Source: {data}')
+    print(f'Data from Source: {data}')
 
     if should_use_and_not_delete_cache and not should_clear_cache:
         write_to_cache(hash_id, data)
