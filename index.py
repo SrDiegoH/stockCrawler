@@ -25,7 +25,7 @@ VALID_SOURCES = {
     'ALL_SOURCE': 'all'
 }
 
-VALID_INFOS = [ 'actuation', 'assets_value', 'avg_annual_dividends', 'cagr_profit', 'cagr_revenue', 'debit', 'dy', 'ebit', 'enterprise_value', 'equity_value', 'gross_margin', 'initial_date', 'latests_dividends', 'link', 'liquidity', 'market_value', 'max_52_weeks', 'min_52_weeks', 'name', 'net_margin', 'net_profit', 'net_revenue', 'payout', 'pl', 'price', 'pvp', 'roe', 'sector', 'total_issued_shares', 'type', 'variation_12m', 'variation_30d', 'beta' ]
+VALID_INFOS = [ 'actuation', 'assets_value', 'avg_annual_dividends', 'cagr_profit', 'cagr_revenue', 'debit', 'dy', 'ebit', 'enterprise_value', 'equity_value', 'gross_margin', 'initial_date', 'latests_dividends', 'link', 'liquidity', 'management_fee', 'market_value', 'max_52_weeks', 'min_52_weeks', 'name', 'net_margin', 'net_profit', 'net_revenue', 'payout', 'pl', 'price', 'pvp', 'roe', 'sector', 'total_issued_shares', 'type', 'variation_12m', 'variation_30d', 'beta' ]
 
 def request_get(url, headers=None):
     response = requests.get(url, headers=headers)
@@ -188,7 +188,8 @@ def convert_investidor10_stock_and_reit_data(json_ticker_page, json_dividends_da
         'pl': lambda: text_to_number(balance['pl']),
         'roe': lambda: text_to_number(balance['roe']),
         'payout': lambda: text_to_number(balance['api_info']['common_size_ratios']['dividend_payout_ratio']),
-        'beta' : lambda: None
+        'beta': lambda: None,
+        'management_fee': lambda: None
     }
 
     final_data = { info: ALL_INFO[info]() for info in info_names }
@@ -279,7 +280,8 @@ def convert_investidor10_etf_data(html_page, json_dividends_data, info_names):
         'pl': lambda: None,
         'roe': lambda: None,
         'payout': lambda: None,
-        'beta' : lambda: None
+        'beta': lambda: None,
+        'management_fee': lambda: None
     }
 
     final_data = { info: ALL_INFO[info]() for info in info_names }
@@ -378,7 +380,8 @@ def convert_stockanalysis_etf_data(html_page, info_names):
         'pl': lambda: text_to_number(get_substring(html_page, 'peRatio:"', '",')),
         'roe': lambda: None,
         'payout': lambda: text_to_number(get_substring(html_page, 'payoutRatio:"', '%",')),
-        'beta': lambda: text_to_number(get_substring(html_page, 'beta:"', '",'))
+        'beta': lambda: text_to_number(get_substring(html_page, 'beta:"', '",')),
+        'management_fee': lambda: text_to_number(get_substring(html_page, 'expenseRatio:"', '%",')),
     }
 
     final_data = { info: ALL_INFO[info]() for info in info_names }
