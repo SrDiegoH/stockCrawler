@@ -348,7 +348,7 @@ def convert_stockanalysis_etf_data(html_page, info_names):
         'type': lambda: get_substring(html_page, '"Asset Class","', '"]'),
         'sector': lambda: get_substring(html_page, '"Category","', '"]'),
         'actuation': lambda: get_substring(html_page, '"Index Tracked","', '"]'),
-        'link': lambda: None,
+        'link': lambda: get_substring(html_page, 'etf_website:"', '",'),
         'price': lambda: text_to_number(get_substring(html_page, 'cl:', ',')),
         'liquidity': lambda: text_to_number(get_substring(html_page, 'v:', ',')),
         'total_issued_shares': lambda: total_issued_shares,
@@ -397,7 +397,7 @@ def get_etf_from_stockanalysis(ticker, info_names):
         }
 
         response = request_get(f'https://stockanalysis.com/etf/{ticker}', headers)
-        json_data = get_substring(response.text, 'const data =', 'news:')
+        json_data = get_substring(response.text[100_000:], 'const data =', 'news:')
 
         #print(f'Converted Stock Analysis data: {convert_stockanalysis_etf_data(json_data, info_names)}')
         return convert_stockanalysis_etf_data(json_data, info_names)
