@@ -25,7 +25,7 @@ VALID_SOURCES = {
     'ALL_SOURCE': 'all'
 }
 
-VALID_INFOS = [ 'actuation', 'assets_value', 'avg_annual_dividends', 'cagr_profit', 'cagr_revenue', 'debit', 'dy', 'ebit', 'enterprise_value', 'equity_value', 'gross_margin', 'initial_date', 'latests_dividends', 'link', 'liquidity', 'management_fee', 'market_value', 'max_52_weeks', 'min_52_weeks', 'name', 'net_margin', 'net_profit', 'net_revenue', 'payout', 'pl', 'price', 'pvp', 'roe', 'sector', 'total_issued_shares', 'type', 'variation_12m', 'variation_30d', 'beta' ]
+VALID_INFOS = [ 'actuation', 'assets_value', 'avg_annual_dividends', 'cagr_profit', 'cagr_revenue', 'debit', 'dy', 'ebit', 'enterprise_value', 'equity_value', 'equity_price', 'gross_margin', 'initial_date', 'latests_dividends', 'link', 'liquidity', 'management_fee', 'market_value', 'max_52_weeks', 'min_52_weeks', 'name', 'net_margin', 'net_profit', 'net_revenue', 'payout', 'pl', 'price', 'pvp', 'roe', 'sector', 'total_issued_shares', 'type', 'variation_12m', 'variation_30d', 'beta' ]
 
 def request_get(url, headers=None):
     response = requests.get(url, headers=headers)
@@ -164,6 +164,7 @@ def convert_investidor10_stock_and_reit_data(json_ticker_page, json_dividends_da
         'total_issued_shares': lambda: balance['shares_outstanding'],
         'enterprise_value': lambda: None,
         'equity_value': lambda: balance['total_equity'],
+        'equity_price': lambda: None,
         'net_revenue': lambda: balance['revenue'],
         'net_profit': lambda: balance['net_income'],
         'net_margin': lambda: text_to_number(balance['net_margin']),
@@ -256,6 +257,7 @@ def convert_investidor10_etf_data(html_page, json_dividends_data, info_names):
         'total_issued_shares': lambda: None,
         'enterprise_value': lambda: None,
         'equity_value': lambda: None,
+        'equity_price': lambda: None,
         'net_revenue': lambda: None,
         'net_profit': lambda: None,
         'net_margin': lambda: None,
@@ -344,6 +346,8 @@ def convert_stockanalysis_etf_data(html_page, info_names):
 
     equity_value = multiply_by_unit(get_substring(html_page, 'aum:"$', '",'))
     total_issued_shares = multiply_by_unit(get_substring(html_page, 'sharesOut:"', '",'))
+    equity_price = equity_value / total_issued_shares
+    price = text_to_number(get_substring(html_page, 'cl:', ','))
 
     ALL_INFO = {
         'name': lambda: get_substring(html_page, 'name:"', '",'),
@@ -351,11 +355,12 @@ def convert_stockanalysis_etf_data(html_page, info_names):
         'sector': lambda: get_substring(html_page, '"Category","', '"]'),
         'actuation': lambda: get_substring(html_page, '"Index Tracked","', '"]'),
         'link': lambda: get_substring(html_page, 'etf_website:"', '",'),
-        'price': lambda: text_to_number(get_substring(html_page, 'cl:', ',')),
+        'price': lambda: price,
         'liquidity': lambda: text_to_number(get_substring(html_page, 'v:', ',')),
         'total_issued_shares': lambda: total_issued_shares,
         'enterprise_value': lambda: None,
         'equity_value': lambda: equity_value,
+        'equity_price': lambda: equity_price,
         'net_revenue': lambda: None,
         'net_profit': lambda: None,
         'net_margin': lambda: None,
@@ -368,7 +373,7 @@ def convert_stockanalysis_etf_data(html_page, info_names):
         'variation_30d': lambda: None,
         'min_52_weeks': lambda: text_to_number(get_substring(html_page, 'l52:', ',')),
         'max_52_weeks': lambda: text_to_number(get_substring(html_page, 'h52:', ',')),
-        'pvp': lambda: equity_value / total_issued_shares,
+        'pvp': lambda: price / equity_price,
         'dy':  lambda: text_to_number(get_substring(html_page, 'dividendYield:"', '%",')),
         'latests_dividends': lambda: get_leatests_dividends(html_page),
         'avg_annual_dividends': lambda: text_to_number(get_substring(html_page, 'dps:"$', '",')) / 12,
