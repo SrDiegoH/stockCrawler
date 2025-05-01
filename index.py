@@ -245,7 +245,7 @@ def convert_investidor10_etf_data(html_page, json_dividends_data, info_names):
         return text_to_number(data)
 
     ALL_INFO = {
-        'name': lambda: get_substring(html_page, 'name-company">', '<', patterns_to_remove).replace('&', ''),
+        'name': lambda: get_substring(html_page, 'name-company">', '<', patterns_to_remove).replace('&amp;', '&'),
         'type': lambda: None,
         'sector': lambda: None,
         'actuation': lambda: None,
@@ -407,28 +407,28 @@ def get_etf_from_stockanalysis(ticker, info_names):
 
 
 def get_etf_from_all_sources(ticker, info_names):
-    data_investidor10 = get_etf_from_investidor10(ticker, info_names)
-    #print(f'Data from Investidor10: {data_investidor10}')
-
-    blank_investidor10_info_names = [ info for info in info_names if not data_investidor10.get(info, False) ]
-    #print(f'Info names: {blank_investidor10_info_names}')
-
-    if data_investidor10 and not blank_investidor10_info_names:
-        return data_investidor10
-
-    data_stockanalysis = get_etf_from_stockanalysis(ticker, blank_investidor10_info_names if blank_investidor10_info_names else info_names)
+    data_stockanalysis = get_etf_from_stockanalysis(ticker, info_names)
     #print(f'Data from Stock Analysis: {data_stockanalysis}')
 
-    if not data_stockanalysis:
-        return data_investidor10
+    blank_stockanalysis_info_names = [ info for info in info_names if not data_stockanalysis.get(info, False) ]
+    #print(f'Info names: {blank_stockanalysis_info_names}')
 
-    return { **data_investidor10, **data_stockanalysis }
+    if data_stockanalysis and not blank_stockanalysis_info_names:
+        return data_stockanalysis
+
+    data_investidor10 = get_etf_from_investidor10(ticker, blank_stockanalysis_info_names if blank_stockanalysis_info_names else info_names)
+    #print(f'Data from Investidor10: {data_investidor10}')
+
+    if not data_investidor10:
+        return data_stockanalysis
+
+    return { **data_stockanalysis, **data_investidor10 }
 
 def get_etf_from_sources(ticker, share_type, source, info_names):
-    if source == VALID_SOURCES['INVESTIDOR10_SOURCE']:
-        return get_etf_from_investidor10(ticker, info_names)
-    elif source == VALID_SOURCES['STOCKANALYSIS_SOURCE']:
+    if source == VALID_SOURCES['STOCKANALYSIS_SOURCE']:
         return get_etf_from_stockanalysis(ticker, info_names)
+    elif source == VALID_SOURCES['INVESTIDOR10_SOURCE']:
+        return get_etf_from_investidor10(ticker, info_names)
 
     return get_etf_from_all_sources(ticker, info_names)
 
