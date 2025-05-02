@@ -248,7 +248,7 @@ def convert_investidor10_etf_data(html_page, json_dividends_data, info_names):
 
     ALL_INFO = {
         'name': lambda: get_substring(html_page, 'name-company">', '<', patterns_to_remove).replace('&amp;', '&'),
-        'type': lambda: None,
+        'type': lambda: 'ETF',
         'sector': lambda: None,
         'actuation': lambda: None,
         'link': lambda: None,
@@ -351,8 +351,8 @@ def convert_stockanalysis_etf_data(html_page, info_names):
 
     ALL_INFO = {
         'name': lambda: get_substring(html_page, 'name:"', '",'),
-        'type': lambda: get_substring(html_page, '"Asset Class","', '"]'),
-        'sector': lambda: get_substring(html_page, '"Category","', '"]'),
+        'type': lambda: 'ETF',
+        'sector': lambda: get_substring(html_page, '"Asset Class","', '"]') + ' - ' + get_substring(html_page, '"Category","', '"]'),
         'actuation': lambda: get_substring(html_page, '"Index Tracked","', '"]'),
         'link': lambda: get_substring(html_page, 'etf_website:"', '",'),
         'price': lambda: price,
