@@ -140,6 +140,9 @@ def write_to_cache(hash_id, data):
         cache_file.write(f'{hash_id}#@#{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}#@#{data}\n')
     #print('Writed')
 
+def remove_type_from_name(text):
+    return text.replace('REIT', '').replace('STOCK', '').replace('ETF', '').strip()
+
 def get_leatests_dividends(dividends):
     get_leatest_dividend = lambda dividends, year: next((dividend['price'] for dividend in dividends if dividend['created_at'] == year), None)
 
@@ -154,7 +157,7 @@ def convert_investidor10_stock_and_reit_data(json_ticker_page, json_dividends_da
     actual_price = max(json_ticker_page['quotations'], key=lambda quotation: datetime.strptime(quotation['date'], "%Y-%m-%dT%H:%M:%S.%fZ"))['price']
 
     ALL_INFO = {
-        'name': lambda: json_ticker_page['company_name'],
+        'name': lambda: remove_type_from_name(json_ticker_page['company_name']),
         'type': lambda: json_ticker_page['type'],
         'sector': lambda: json_ticker_page['industry']['sector']['name'],
         'actuation': lambda: json_ticker_page['industry']['name'],
@@ -247,7 +250,7 @@ def convert_investidor10_etf_data(html_page, json_dividends_data, info_names):
         return text_to_number(data)
 
     ALL_INFO = {
-        'name': lambda: get_substring(html_page, 'name-company">', '<', patterns_to_remove).replace('&amp;', '&'),
+        'name': lambda: remove_type_from_name(get_substring(html_page, 'name-company">', '<', patterns_to_remove).replace('&amp;', '&')),
         'type': lambda: 'ETF',
         'sector': lambda: None,
         'actuation': lambda: None,
@@ -350,7 +353,7 @@ def convert_stockanalysis_etf_data(html_page, info_names):
     price = text_to_number(get_substring(html_page, 'cl:', ','))
 
     ALL_INFO = {
-        'name': lambda: get_substring(html_page, 'name:"', '",'),
+        'name': lambda: remove_type_from_name(get_substring(html_page, 'name:"', '",')),
         'type': lambda: 'ETF',
         'sector': lambda: get_substring(html_page, '"Asset Class","', '"]') + ' - ' + get_substring(html_page, '"Category","', '"]'),
         'actuation': lambda: get_substring(html_page, '"Index Tracked","', '"]'),
