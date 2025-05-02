@@ -355,7 +355,7 @@ def convert_stockanalysis_etf_data(html_page, info_names):
     ALL_INFO = {
         'name': lambda: remove_type_from_name(get_substring(html_page, 'name:"', '",')),
         'type': lambda: 'ETF',
-        'sector': lambda: get_substring(html_page, '"Asset Class","', '"]') + ' - ' + get_substring(html_page, '"Category","', '"]'),
+        'sector': lambda: get_substring(html_page, '"Asset Class","', '"]') + '/' + get_substring(html_page, '"Category","', '"]'),
         'actuation': lambda: get_substring(html_page, '"Index Tracked","', '"]'),
         'link': lambda: get_substring(html_page, 'etf_website:"', '",'),
         'price': lambda: price,
