@@ -408,7 +408,7 @@ def get_etf_from_stockanalysis(ticker, info_names):
         }
 
         response = request_get(f'https://stockanalysis.com/etf/{ticker}', headers)
-        json_data = get_substring(response.text[100_000:], 'const data =', 'news:')
+        json_data = get_substring(response.text[10_000:], 'const data =', 'news:')
 
         #print(f'Converted Stock Analysis data: {convert_stockanalysis_etf_data(json_data, info_names)}')
         return convert_stockanalysis_etf_data(json_data, info_names)
