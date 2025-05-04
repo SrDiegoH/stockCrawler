@@ -70,19 +70,37 @@ def text_to_number(text, should_convert_thousand_decimal_separators=False, conve
 
         if should_convert_thousand_decimal_separators:
             text = text.replace('.','').replace(',','.')
+        else:
+            text = text.replace(',','')
 
         if '%' in text:
             return float(text.replace('%', '').strip()) / (100 if convert_percent_to_decimal else 1)
 
         if 'R$' in text:
             text = text.replace('R$', '')
-
-        if 'US$' in text:
+        elif 'US$' in text:
             text = text.replace('US$', '')
+        elif '$' in text:
+            text = text.replace('$', '')
 
         return float(text.strip())
     except:
         return 0
+
+def multiply_by_unit(data):
+    if not data:
+        return None
+
+    if 'K' in data:
+        return text_to_number(data.replace('K', '')) * 1_000
+    elif 'M' in data:
+        return text_to_number(data.replace('Milhões', '').replace('M', '')) * 1_000_000
+    elif 'B' in data:
+        return text_to_number(data.replace('Bilhões', '').replace('B', '')) * 1_000_000_000
+    elif 'T' in data:
+        return text_to_number(data.replace('Trilhões', '').replace('T', '')) * 1_000_000_000_000
+
+    return text_to_number(data)
 
 def delete_cache():
     if os.path.exists(CACHE_FILE):
@@ -152,7 +170,7 @@ def get_leatests_dividends(dividends):
 
     return value if value else get_leatest_dividend(dividends, current_year -1)
 
-def convert_investidor10_stock_and_reit_data(json_ticker_page, json_dividends_data, info_names):
+def convert_investidor10_stock_or_reit_data(json_ticker_page, json_dividends_data, info_names):
     balance = max(json_ticker_page['balances'], key=lambda balance: datetime.strptime(balance['reference_date'], "%Y-%m-%dT%H:%M:%S.%fZ"))
     actual_price = max(json_ticker_page['quotations'], key=lambda quotation: datetime.strptime(quotation['date'], "%Y-%m-%dT%H:%M:%S.%fZ"))['price']
 
@@ -200,7 +218,7 @@ def convert_investidor10_stock_and_reit_data(json_ticker_page, json_dividends_da
 
     return final_data
 
-def get_stock_and_reit_from_investidor10(ticker, share_type, source, info_names):
+def get_stock_or_reit_from_investidor10(ticker, share_type, info_names):
     try:
         headers = {
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -221,11 +239,113 @@ def get_stock_and_reit_from_investidor10(ticker, share_type, source, info_names)
             response = request_get(f'https://investidor10.com.br/api/stock/dividendos/chart/{json_ticker_page["id"]}/3650/ano', headers)
             json_dividends_data = response.json()
 
-        #print(f'Converted Investidor 10 data: {convert_investidor10_stock_and_reit_data(json_ticker_page, json_dividends_data, info_names)}')
-        return convert_investidor10_stock_and_reit_data(json_ticker_page, json_dividends_data, info_names)
+        #print(f'Converted Investidor 10 data: {convert_investidor10_stock_or_reit_data(json_ticker_page, json_dividends_data, info_names)}')
+        return convert_investidor10_stock_or_reit_data(json_ticker_page, json_dividends_data, info_names)
     except Exception as error:
         #print(f"Error on get Investidor 10 data: {traceback.format_exc()}")
         return None
+
+def convert_stockanalysis_stock_or_reit_data(ticker, share_type, generic_json, statistics_json, info_names):
+    roa = text_to_number(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['financialEfficiency']]['data']][1]]['value']])
+    net_profit = multiply_by_unit(generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][0]['netIncome']])
+
+    ALL_INFO = {
+        'name': lambda: generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][1]['nameFull']],
+        #'type': lambda: generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][1]['type']],
+        'type': lambda: share_type[:-1].upper(),
+        'sector': lambda: generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][0]['infoTable']][1]]['v']],
+        'actuation': lambda: generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][0]['infoTable']][0]]['v']],
+        #'link': lambda: generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][0]['infoTable']][6]]['eu']],
+        'link': lambda: f'https://stockanalysis.com/stocks/{ticker}/company/',
+        'price': lambda: generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][1]['quote']]['cl']],
+        #'liquidity': lambda: generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][1]['quote']]['v']],
+        'liquidity': lambda: text_to_number(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['stockPrice']]['data']][5]]['value']]),
+        'total_issued_shares': lambda: multiply_by_unit(generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][0]['sharesOut']]),
+        'enterprise_value': lambda: multiply_by_unit(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['valuation']]['data']][1]]['value']]),
+        'equity_value': lambda: None,
+        'equity_price': lambda: None,
+        'net_revenue': lambda: multiply_by_unit(generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][0]['revenue']]),
+        'net_profit': lambda: net_profit,
+        'net_margin': lambda: multiply_by_unit(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['margins']]['data']][3]]['value']]),
+        'gross_margin': lambda: multiply_by_unit(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['margins']]['data']][0]]['value']]),
+        'cagr_revenue': lambda: None,
+        'cagr_profit': lambda: None,
+        'debit': lambda: multiply_by_unit(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['balanceSheet']]['data']][1]]['value']]),
+        'ebit':  lambda: multiply_by_unit(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['incomeStatement']]['data']][2]]['value']]),
+        'variation_12m': lambda: text_to_number(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['stockPrice']]['data']][1]]['value']]),
+        'variation_30d': lambda: None,
+        'min_52_weeks': lambda: generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][1]['quote']]['l52']],
+        'max_52_weeks': lambda: generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][1]['quote']]['h52']],
+        'pvp': lambda: None,
+        'dy':  lambda: text_to_number(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['dividends']]['data']][1]]['value']]),
+        'latests_dividends': lambda: None,
+        'avg_annual_dividends': lambda: text_to_number(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['dividends']]['data']][0]]['value']]),
+        'vacancy': lambda: None,
+        'total_real_state': lambda: None,
+        'assets_value': lambda: net_profit / roa,
+        'market_value': lambda: multiply_by_unit(generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][0]['marketCap']]),
+        'initial_date': lambda: generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][1]['ipoDate']],
+        'pl': lambda: generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][0]['peRatio']],
+        'roe': lambda: text_to_number(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['financialEfficiency']]['data']][0]]['value']]),
+        'payout': lambda: text_to_number(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['dividends']]['data']][4]]['value']]),
+        'beta': lambda: generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][0]['beta']],
+        'management_fee': lambda: None
+    }
+
+    final_data = { info: ALL_INFO[info]() for info in info_names }
+
+    return final_data
+
+def get_stock_or_reit_from_stockanalysis(ticker, share_type, info_names):
+    try:
+        headers = {
+            'accept': '*/*',
+            'accept-language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+            'cache-control': 'no-cache',
+            'dnt': '1',
+            'pragma': 'no-cache',
+            'priority': 'u=0, i',
+            'referer': 'https://stockanalysis.com/',
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 OPR/118.0.0.0',
+        }
+
+        response = request_get(f'https://stockanalysis.com/stocks/{ticker}/__data.json?x-sveltekit-trailing-slash=1&x-sveltekit-invalidated=001', headers)
+        generic_json = response.json()
+
+        response = request_get(f'https://stockanalysis.com/stocks/{ticker}/statistics/__data.json?x-sveltekit-trailing-slash=1&x-sveltekit-invalidated=001', headers)
+        statistics_json = response.json()
+
+        #print(f'Converted Stock Analysis data: {convert_stockanalysis_stock_or_reit_data(ticker, generic_json, statistics_json, info_names)}')
+        return convert_stockanalysis_stock_or_reit_data(ticker, share_type, generic_json, statistics_json, info_names)
+    except Exception as error:
+        #print(f"Error on get Stock Analysis data: {traceback.format_exc()}")
+        return None
+
+def get_stock_or_reit_from_all_sources(ticker, share_type, info_names):
+    data_stockanalysis = get_stock_or_reit_from_stockanalysis(ticker, share_type, info_names)
+    #print(f'Data from Stock Analysis: {data_stockanalysis}')
+
+    blank_stockanalysis_info_names = [ info for info in info_names if not data_stockanalysis.get(info, False) ]
+    #print(f'Info names: {blank_stockanalysis_info_names}')
+
+    if data_stockanalysis and not blank_stockanalysis_info_names:
+        return data_stockanalysis
+
+    data_investidor10 = get_stock_or_reit_from_investidor10(ticker, share_type, blank_stockanalysis_info_names if blank_stockanalysis_info_names else info_names)
+    #print(f'Data from Investidor10: {data_investidor10}')
+
+    if not data_investidor10:
+        return data_stockanalysis
+
+    return { **data_stockanalysis, **data_investidor10 }
+
+def get_stock_or_reit_from_sources(ticker, share_type, source, info_names):
+    if source == VALID_SOURCES['STOCKANALYSIS_SOURCE']:
+        return get_stock_or_reit_from_stockanalysis(ticker, share_type, info_names)
+    elif source == VALID_SOURCES['INVESTIDOR10_SOURCE']:
+        return get_stock_or_reit_from_investidor10(ticker, share_type, info_names)
+
+    return get_stock_or_reit_from_all_sources(ticker, share_type, info_names)
 
 def convert_investidor10_etf_data(html_page, json_dividends_data, info_names):
     patterns_to_remove = [
@@ -237,17 +357,6 @@ def convert_investidor10_etf_data(html_page, json_dividends_data, info_names):
         '<span>',
         '<span class="value">'
     ]
-
-    def multiply_by_unit(data):
-        if not data:
-            return None
-
-        if 'K' in data:
-            return text_to_number(data.replace('K', '')) * 1000
-        elif 'M' in data:
-            return text_to_number(data.replace('Milhões', '').replace('M', '')) * 1000000
-
-        return text_to_number(data)
 
     ALL_INFO = {
         'name': lambda: remove_type_from_name(get_substring(html_page, 'name-company">', '<', patterns_to_remove).replace('&amp;', '&')),
@@ -334,19 +443,6 @@ def convert_stockanalysis_etf_data(html_page, info_names):
         except:
           return None
 
-    def multiply_by_unit(data):
-        if not data:
-            return None
-
-        if 'K' in data:
-            return text_to_number(data.replace('K', '')) * 1_000
-        elif 'M' in data:
-            return text_to_number(data.replace('M', '')) * 1_000_000
-        elif 'B' in data:
-            return text_to_number(data.replace('B', '')) * 1_000_000_000
-
-        return text_to_number(data)
-
     equity_value = multiply_by_unit(get_substring(html_page, 'aum:"$', '",'))
     total_issued_shares = multiply_by_unit(get_substring(html_page, 'sharesOut:"', '",'))
     equity_price = equity_value / total_issued_shares
@@ -416,7 +512,6 @@ def get_etf_from_stockanalysis(ticker, info_names):
         #print(f"Error on get Stock Analysis data: {traceback.format_exc()}")
         return None
 
-
 def get_etf_from_all_sources(ticker, info_names):
     data_stockanalysis = get_etf_from_stockanalysis(ticker, info_names)
     #print(f'Data from Stock Analysis: {data_stockanalysis}')
@@ -445,11 +540,11 @@ def get_etf_from_sources(ticker, share_type, source, info_names):
 
 @app.route('/reit/<ticker>', methods=['GET'])
 def get_reit_data(ticker):
-    return get_share_data(ticker, 'reits', get_stock_and_reit_from_investidor10)
+    return get_share_data(ticker, 'reits', get_stock_or_reit_from_sources)
 
 @app.route('/stock/<ticker>', methods=['GET'])
 def get_stock_data(ticker):
-    return get_share_data(ticker, 'stocks', get_stock_and_reit_from_investidor10)
+    return get_share_data(ticker, 'stocks', get_stock_or_reit_from_sources)
 
 @app.route('/etf/<ticker>', methods=['GET'])
 def get_etf_data(ticker):
