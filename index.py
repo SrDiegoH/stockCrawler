@@ -318,7 +318,7 @@ def get_stock_or_reit_from_stockanalysis(ticker, share_type, info_names):
         #print(f'Converted Stock Analysis data: {convert_stockanalysis_stock_or_reit_data(ticker, generic_json, statistics_json, info_names)}')
         return convert_stockanalysis_stock_or_reit_data(ticker, share_type, generic_json, statistics_json, info_names)
     except Exception as error:
-        #print(f"Error on get Stock Analysis data: {traceback.format_exc()}")
+        print(f"Error on get Stock Analysis data: {traceback.format_exc()}")
         return None
 
 def get_stock_or_reit_from_all_sources(ticker, share_type, info_names):
@@ -555,7 +555,7 @@ def get_share_data(ticker, share_type, request_share):
     should_clear_cache = request.args.get('should_clear_cache', '0').lower() in TRUE_BOOL_VALUES
     should_use_cache = request.args.get('should_use_cache', '1').lower() in TRUE_BOOL_VALUES
 
-    source =  request.args.get('source', VALID_SOURCES['ALL_SOURCE']).replace(' ', '').lower()
+    source = request.args.get('source', VALID_SOURCES['ALL_SOURCE']).replace(' ', '').lower()
     source = source if source in VALID_SOURCES.values() else VALID_SOURCES['ALL_SOURCE']
 
     info_names = request.args.get('info_names', '').replace(' ', '').lower().split(',')
@@ -582,7 +582,7 @@ def get_share_data(ticker, share_type, request_share):
             return jsonify({'data': cached_data, 'source': 'cache', 'date': cache_date.strftime("%d/%m/%Y, %H:%M")}), 200
 
     data = request_share(ticker, share_type, source, info_names)
-    print(f'Data from Source: {data}')
+    #print(f'Data from Source: {data}')
 
     if should_use_and_not_delete_cache and not should_clear_cache:
         write_to_cache(hash_id, data)
