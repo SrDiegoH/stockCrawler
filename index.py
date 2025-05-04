@@ -315,6 +315,8 @@ def get_stock_or_reit_from_stockanalysis(ticker, share_type, info_names):
         response = request_get(f'https://stockanalysis.com/stocks/{ticker}/statistics/__data.json?x-sveltekit-trailing-slash=1&x-sveltekit-invalidated=001', headers)
         statistics_json = response.json()
 
+        print(f'generic_json: {generic_json}')
+        print(f'statistics_json: {statistics_json}')
         #print(f'Converted Stock Analysis data: {convert_stockanalysis_stock_or_reit_data(ticker, generic_json, statistics_json, info_names)}')
         return convert_stockanalysis_stock_or_reit_data(ticker, share_type, generic_json, statistics_json, info_names)
     except Exception as error:
