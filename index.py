@@ -249,6 +249,8 @@ def convert_stockanalysis_stock_or_reit_data(ticker, share_type, initial_page, s
     roa = text_to_number(get_substring(statistics_page, 'ROA)",value:"', '%'))
     net_profit = multiply_by_unit(get_substring(initial_page, 'netIncome:"', '",'))
 
+    avg_annual_dividends = text_to_number(get_substring(statistics_page, 'Dividend Per Share",value:"$', '",'))
+
     ALL_INFO = {
         'name': lambda: get_substring(initial_page, 'nameFull:"', '",'),
         'type': lambda: share_type[:-1].upper(),
@@ -277,8 +279,8 @@ def convert_stockanalysis_stock_or_reit_data(ticker, share_type, initial_page, s
         'max_52_weeks': lambda: get_substring(initial_page, 'h52:', ','),
         'pvp': lambda: None,
         'dy':  lambda: text_to_number(get_substring(statistics_page, 'Dividend Yield",value:"', '%')),
-        'latests_dividends': lambda: None,
-        'avg_annual_dividends': lambda: text_to_number(get_substring(statistics_page, 'Dividend Per Share",value:"$', '",')),
+        'latests_dividends': lambda: avg_annual_dividends / 12,
+        'avg_annual_dividends': lambda: avg_annual_dividends,
         'vacancy': lambda: None,
         'total_real_state': lambda: None,
         'assets_value': lambda: net_profit / roa,
