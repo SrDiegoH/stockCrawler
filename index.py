@@ -282,12 +282,12 @@ def convert_stockanalysis_stock_or_reit_data(ticker, share_type, initial_page, s
         'vacancy': lambda: None,
         'total_real_state': lambda: None,
         'assets_value': lambda: net_profit / roa,
-        'market_value': lambda: multiply_by_unit(get_substring(initial_page, 'Market Cap",value:"', '",')),
+        'market_value': lambda: multiply_by_unit(get_substring(statistics_page, 'Market Cap",value:"', '",')),
         'initial_date': lambda: get_substring(initial_page, 'inception:"', '",'),
         'pl': lambda: get_substring(initial_page, 'peRatio:"', '",'),
         'roe': lambda: text_to_number(get_substring(statistics_page, 'ROE)",value:"', '%')),
         'payout': lambda: text_to_number(get_substring(statistics_page, 'Payout Ratio",value:"', '%')),
-        'beta': lambda: get_substring(initial_page, 'Beta (5Y)",value:"', '",'),
+        'beta': lambda: get_substring(statistics_page, 'Beta (5Y)",value:"', '",'),
         'management_fee': lambda: None
     }
 
@@ -313,7 +313,7 @@ def get_stock_or_reit_from_stockanalysis(ticker, share_type, info_names):
 
         response =  request_get(f'https://stockanalysis.com/stocks/{ticker}/statistics', headers)
         statistics_page = get_substring(response.text[10_000:], 'const data =', ';')
-  	    
+
         #print(f'Converted Stock Analysis data: {convert_stockanalysis_stock_or_reit_data(ticker, share_type, initial_page, statistics_page, info_names)}')
         return convert_stockanalysis_stock_or_reit_data(ticker, share_type, initial_page, statistics_page, info_names)
     except Exception as error:
