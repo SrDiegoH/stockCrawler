@@ -245,50 +245,49 @@ def get_stock_or_reit_from_investidor10(ticker, share_type, info_names):
         #print(f"Error on get Investidor 10 data: {traceback.format_exc()}")
         return None
 
-def convert_stockanalysis_stock_or_reit_data(ticker, share_type, generic_json, statistics_json, info_names):
-    roa = text_to_number(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['financialEfficiency']]['data']][1]]['value']])
-    net_profit = multiply_by_unit(generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][0]['netIncome']])
+def convert_stockanalysis_stock_or_reit_data(ticker, share_type, initial_page, statistics_page, info_names):
+    roa = text_to_number(get_substring(statistics_page, 'ROA)",value:"', '%'))
+    net_profit = multiply_by_unit(get_substring(initial_page, 'netIncome:"', '",'))
 
     ALL_INFO = {
-        'name': lambda: generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][1]['nameFull']],
-        #'type': lambda: generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][1]['type']],
+        'name': lambda: get_substring(initial_page, 'nameFull:"', '",'),
         'type': lambda: share_type[:-1].upper(),
-        'sector': lambda: generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][0]['infoTable']][1]]['v']],
-        'actuation': lambda: generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][0]['infoTable']][0]]['v']],
-        #'link': lambda: generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][0]['infoTable']][6]]['eu']],
+        'sector': lambda: get_substring(initial_page, 'Sector",v:"', '",'),
+        'actuation': lambda: get_substring(initial_page, 'Industry",v:"', '",'),
+        #'link': lambda: get_substring(initial_page, 'Website",v:"', '",'),
         'link': lambda: f'https://stockanalysis.com/stocks/{ticker}/company/',
-        'price': lambda: generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][1]['quote']]['cl']],
-        #'liquidity': lambda: generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][1]['quote']]['v']],
-        'liquidity': lambda: text_to_number(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['stockPrice']]['data']][5]]['value']]),
-        'total_issued_shares': lambda: multiply_by_unit(generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][0]['sharesOut']]),
-        'enterprise_value': lambda: multiply_by_unit(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['valuation']]['data']][1]]['value']]),
+        'price': lambda: get_substring(initial_page, 'cl:', ','),
+        #'liquidity': lambda: get_substring(initial_page, 'v:', '",'),
+        'liquidity': lambda: text_to_number(get_substring(statistics_page, 'Average Volume (20 Days)",value:"', '",')),
+        'total_issued_shares': lambda: multiply_by_unit(get_substring(initial_page, 'sharesOut:"', '",')),
+        'enterprise_value': lambda: multiply_by_unit(get_substring(statistics_page, 'Enterprise Value",value:"', '",')),
         'equity_value': lambda: None,
         'equity_price': lambda: None,
-        'net_revenue': lambda: multiply_by_unit(generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][0]['revenue']]),
+        'net_revenue': lambda: multiply_by_unit(get_substring(initial_page, 'revenue:"', '",')),
         'net_profit': lambda: net_profit,
-        'net_margin': lambda: multiply_by_unit(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['margins']]['data']][3]]['value']]),
-        'gross_margin': lambda: multiply_by_unit(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['margins']]['data']][0]]['value']]),
+        'net_margin': lambda: multiply_by_unit(get_substring(statistics_page, 'Operating Margin",value:"', '%')),
+        'gross_margin': lambda: multiply_by_unit(get_substring(statistics_page, 'Gross Margin",value:"', '%')),
         'cagr_revenue': lambda: None,
         'cagr_profit': lambda: None,
-        'debit': lambda: multiply_by_unit(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['balanceSheet']]['data']][1]]['value']]),
-        'ebit':  lambda: multiply_by_unit(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['incomeStatement']]['data']][2]]['value']]),
-        'variation_12m': lambda: text_to_number(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['stockPrice']]['data']][1]]['value']]),
+        'debit': lambda: multiply_by_unit(get_substring(statistics_page, 'Debt",value:"', '",')),
+        'ebit':  lambda: multiply_by_unit(get_substring(statistics_page, 'EBIT",value:"', '",')),
+        'variation_12m': lambda: text_to_number(get_substring(statistics_page, '52-Week Price Change",value:"', '%')),
         'variation_30d': lambda: None,
-        'min_52_weeks': lambda: generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][1]['quote']]['l52']],
-        'max_52_weeks': lambda: generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][1]['quote']]['h52']],
+        'min_52_weeks': lambda: get_substring(initial_page, 'l52:', ','),
+        'max_52_weeks': lambda: get_substring(initial_page, 'h52:', ','),
         'pvp': lambda: None,
-        'dy':  lambda: text_to_number(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['dividends']]['data']][1]]['value']]),
+        'dy':  lambda: text_to_number(get_substring(statistics_page, 'Dividend Yield",value:"', '%')),
         'latests_dividends': lambda: None,
-        'avg_annual_dividends': lambda: text_to_number(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['dividends']]['data']][0]]['value']]),
+        'avg_annual_dividends': lambda: text_to_number(get_substring(statistics_page, 'Dividend Per Share",value:"$', '",')),
         'vacancy': lambda: None,
         'total_real_state': lambda: None,
         'assets_value': lambda: net_profit / roa,
-        'market_value': lambda: multiply_by_unit(generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][0]['marketCap']]),
-        'initial_date': lambda: generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][1]['ipoDate']],
-        'pl': lambda: generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][0]['peRatio']],
-        'roe': lambda: text_to_number(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['financialEfficiency']]['data']][0]]['value']]),
-        'payout': lambda: text_to_number(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['dividends']]['data']][4]]['value']]),
-        'beta': lambda: generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][0]['beta']],
+        'market_value': lambda: multiply_by_unit(get_substring(initial_page, 'Market Cap",value:"', '",')),
+        'initial_date': lambda: get_substring(initial_page, 'inception:"', '",'),
+        'pl': lambda: get_substring(initial_page, 'peRatio:"', '",'),
+        'roe': lambda: text_to_number(get_substring(statistics_page, 'ROE)",value:"', '%')),
+        'payout': lambda: text_to_number(get_substring(statistics_page, 'Payout Ratio",value:"', '%')),
+        'beta': lambda: get_substring(initial_page, 'Beta (5Y)",value:"', '",'),
         'management_fee': lambda: None
     }
 
@@ -309,19 +308,16 @@ def get_stock_or_reit_from_stockanalysis(ticker, share_type, info_names):
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 OPR/118.0.0.0',
         }
 
-        response = request_get(f'https://stockanalysis.com/stocks/{ticker}/__data.json?x-sveltekit-trailing-slash=1&x-sveltekit-invalidated=001', headers)
-        generic_json = response.json()
+        response =  request_get(f'https://stockanalysis.com/stocks/{ticker}', headers)
+        initial_page = get_substring(response.text[10_000:], 'const data =', 'news:')
 
-        response = request_get(f'https://stockanalysis.com/stocks/{ticker}/statistics/__data.json?x-sveltekit-trailing-slash=1&x-sveltekit-invalidated=001', headers)
-        statistics_json = response.json()
-
-        print(f'generic_json: {generic_json}')
-        print(f'statistics_json: {statistics_json}')
-
-        #print(f'Converted Stock Analysis data: {convert_stockanalysis_stock_or_reit_data(ticker, generic_json, statistics_json, info_names)}')
-        return convert_stockanalysis_stock_or_reit_data(ticker, share_type, generic_json, statistics_json, info_names)
+        response =  request_get(f'https://stockanalysis.com/stocks/{ticker}/statistics', headers)
+        statistics_page = get_substring(response.text[10_000:], 'const data =', ';')
+  	    
+        #print(f'Converted Stock Analysis data: {convert_stockanalysis_stock_or_reit_data(ticker, share_type, initial_page, statistics_page, info_names)}')
+        return convert_stockanalysis_stock_or_reit_data(ticker, share_type, initial_page, statistics_page, info_names)
     except Exception as error:
-        print(f"Error on get Stock Analysis data: {traceback.format_exc()}")
+        #print(f"Error on get Stock Analysis data: {traceback.format_exc()}")
         return None
 
 def get_stock_or_reit_from_all_sources(ticker, share_type, info_names):
