@@ -284,8 +284,7 @@ def convert_stockanalysis_stock_or_reit_data(ticker, share_type, generic_json, s
         'total_real_state': lambda: None,
         'assets_value': lambda: net_profit / roa,
         'market_value': lambda: multiply_by_unit(generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][0]['marketCap']]),
-        #'initial_date': lambda: generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][1]['ipoDate']],
-        'initial_date': lambda: None,
+        'initial_date': lambda: generic_json['nodes'][1]['data'][generic_json['nodes'][1]['data'][1]['ipoDate']],
         'pl': lambda: generic_json['nodes'][2]['data'][generic_json['nodes'][2]['data'][0]['peRatio']],
         'roe': lambda: text_to_number(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['financialEfficiency']]['data']][0]]['value']]),
         'payout': lambda: text_to_number(statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][statistics_json['nodes'][2]['data'][0]['dividends']]['data']][4]]['value']]),
@@ -318,6 +317,7 @@ def get_stock_or_reit_from_stockanalysis(ticker, share_type, info_names):
 
         print(f'generic_json: {generic_json}')
         print(f'statistics_json: {statistics_json}')
+
         #print(f'Converted Stock Analysis data: {convert_stockanalysis_stock_or_reit_data(ticker, generic_json, statistics_json, info_names)}')
         return convert_stockanalysis_stock_or_reit_data(ticker, share_type, generic_json, statistics_json, info_names)
     except Exception as error:
