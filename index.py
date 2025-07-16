@@ -311,10 +311,10 @@ def get_stock_or_reit_from_stockanalysis(ticker, share_type, info_names):
         }
 
         response =  request_get(f'https://stockanalysis.com/stocks/{ticker}', headers)
-        initial_page = get_substring(response.text[10_000:], 'const data =', 'news:')
+        initial_page = get_substring(response.text[5_000:], 'Promise.all([', 'news:')
 
         response =  request_get(f'https://stockanalysis.com/stocks/{ticker}/statistics', headers)
-        statistics_page = get_substring(response.text[10_000:], 'const data =', ';')
+        statistics_page = get_substring(response.text[5_000:], 'Promise.all([', ';')
 
         #print(f'Converted Stock Analysis data: {convert_stockanalysis_stock_or_reit_data(ticker, share_type, initial_page, statistics_page, info_names)}')
         return convert_stockanalysis_stock_or_reit_data(ticker, share_type, initial_page, statistics_page, info_names)
@@ -506,7 +506,7 @@ def get_etf_from_stockanalysis(ticker, info_names):
         }
 
         response = request_get(f'https://stockanalysis.com/etf/{ticker}', headers)
-        json_data = get_substring(response.text[10_000:], 'const data =', 'news:')
+        json_data = get_substring(response.text[5_000:], 'Promise.all([', 'news:')
 
         #print(f'Converted Stock Analysis data: {convert_stockanalysis_etf_data(json_data, info_names)}')
         return convert_stockanalysis_etf_data(json_data, info_names)
