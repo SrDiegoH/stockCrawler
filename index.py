@@ -414,7 +414,7 @@ def convert_stockanalysis_stock_or_reit_data(ticker, share_type, initial_page, s
         'price': lambda: get_substring(initial_page, 'cl:', ','),
         'pvp': lambda: None,
         'roe': lambda: text_to_number(get_substring(statistics_page, 'ROE)",value:"', '%')),
-        'roe': lambda: text_to_number(get_substring(statistics_page, 'ROIC)",value:"', '%')),
+        'roic': lambda: text_to_number(get_substring(statistics_page, 'ROIC)",value:"', '%')),
         'sector': lambda: get_substring(initial_page, 'Sector",v:"', '",'),
         'total_issued_shares': lambda: multiply_by_unit(get_substring(initial_page, 'sharesOut:"', '",')),
         'total_real_state': lambda: None,
