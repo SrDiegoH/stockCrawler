@@ -1,2 +1,2 @@
 # stockCrawler
-Go to brazilian sites about american stocks, reits and etfs and get some infos
+Go to sites about american stocks, REITs and ETFs and get some infos
