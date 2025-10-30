@@ -623,7 +623,7 @@ def convert_stockanalysis_etf_data(html_page, json_quote_data, info_names):
         'pvp': lambda: price / equity_price,
         'roe': lambda: None,
         'roic': lambda: None,
-        'sector': lambda: get_substring(html_page, '"Asset Class","', '"]') + '/' + get_substring(html_page, '"Category","', '"]'),
+        'sector': lambda: str(get_substring(html_page, '"Asset Class","', '"]')) + '/' + str(get_substring(html_page, '"Category","', '"]')),
         'total_issued_shares': lambda: total_issued_shares,
         'total_real_state': lambda: None,
         'type': lambda: 'ETF',
